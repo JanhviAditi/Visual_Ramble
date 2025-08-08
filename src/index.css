@@ -1,0 +1,50 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;500;600;700&family=Caveat:wght@400;500;600;700&family=Quicksand:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Fredoka', sans-serif;
+  }
+  
+  body {
+    font-family: 'Fredoka', sans-serif;
+    background-color: #fcdedc;
+    transition: background-color 0.3s ease;
+  }
+}
+
+@layer components {
+  .font-fredoka {
+    font-family: 'Fredoka', sans-serif;
+  }
+  
+  .font-caveat {
+    font-family: 'Caveat', cursive;
+  }
+  
+  .font-quicksand {
+    font-family: 'Quicksand', sans-serif;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #fbb6ce;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #f687b3;
+}
