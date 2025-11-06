@@ -1,197 +1,179 @@
-# 🌸 Dreamy Image Search Enhancer
+Visual Ramble – AI-Enhanced Image Search Application
+Overview
 
-A beautiful, peach-themed image search web app that enhances your prompts using AI and displays stunning aesthetic images in a responsive masonry grid.
+Visual Ramble is a responsive, AI-powered image search application designed to enhance user prompts and generate high-quality visual results.
+The system integrates OpenRouter’s AI API for intelligent prompt enhancement and Unsplash API for fetching aesthetic, high-resolution images.
+It offers an intuitive interface, modern UI design, and advanced personalization features such as favorites, collections, and theme management.
 
-## ✨ Features
+Features
+Core Functionalities
 
-### 🌟 Core Features
-- **AI-Powered Prompt Enhancement**: Uses OpenRouter API to enhance your search prompts
-- **Keyword Extraction**: Automatically extracts 5-7 clean image search keywords
-- **Unsplash Integration**: Fetches high-quality images based on generated keywords
-- **Responsive Masonry Grid**: Beautiful image display with hover effects
-- **Copy Keywords**: One-click copy of generated keywords to clipboard
+AI-Powered Prompt Enhancement: Refines user input to generate contextually rich and optimized search queries.
 
-### 🔥 Advanced Features
-- **🌓 Light/Dark Mode**: Toggle between light and dark themes with persistent storage
-- **Keyword History**: Remembers and displays your previous searches as clickable chips
-- **❤️ Favorites System**: Heart images to save them to your favorites
-- **📁 Collections**: Create named collections to organize your saved images
-- **📐 Wallpaper Cropping**: Download images as desktop or mobile wallpapers
-- **Fullscreen Modal**: Click any image for a beautiful fullscreen view
+Keyword Extraction: Produces a concise list of relevant keywords for improved image retrieval.
 
-## 🎨 Design & Aesthetics
+Unsplash API Integration: Fetches high-quality images corresponding to enhanced prompts.
 
-- **Dreamy Peach Theme**: Soft, aesthetic colors with glassmorphism effects
-- **Custom Fonts**: Fredoka for body text, Caveat for titles, Quicksand for accents
-- **Responsive Design**: Works perfectly on mobile, tablet, and desktop
-- **Smooth Animations**: Hover effects, transitions, and loading states
-- **Dark Mode Support**: Complete dark theme with custom scrollbars
+Responsive Masonry Grid: Displays images in a visually balanced, responsive layout.
 
-## 🛠️ Tech Stack
+Keyword Copying: Allows quick copying of generated keywords for reuse.
 
-- **React 19** - Modern React with hooks
-- **Tailwind CSS** - Utility-first CSS framework
-- **OpenRouter API** - AI-powered prompt enhancement
-- **Unsplash API** - High-quality image search
-- **React Icons** - Beautiful icon library
-- **React Masonry CSS** - Responsive masonry grid
-- **React Modal** - Fullscreen image modals
+Advanced Functionalities
 
-## 🚀 Getting Started
+Light/Dark Mode: User-selectable themes with persistent storage across sessions.
 
-### Prerequisites
-- Node.js (v16 or higher)
-- npm or yarn
+Search History: Displays recent searches as interactive, reusable keyword chips.
 
-### Installation
+Favorites Management: Enables saving and organizing of preferred images.
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd visram
-   ```
+Custom Collections: Allows creation of user-defined collections for better categorization.
 
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
+Wallpaper Cropping and Download: Offers image download options in desktop and mobile formats.
 
-3. **Set up environment variables**
-   Create a `.env` file in the root directory:
-   ```env
-   VITE_AI_API_KEY=your_openrouter_api_key
-   VITE_UNSPLASH_ACCESS_KEY=your_unsplash_access_key
-   ```
+Fullscreen Image Modal: Provides an immersive viewing experience for selected images.
 
-4. **Start the development server**
-   ```bash
-   npm run dev
-   ```
+Design and Aesthetics
 
-5. **Open your browser**
-   Navigate to `http://localhost:5173`
+Theme: Minimal, peach-toned UI featuring soft gradients and glassmorphism.
 
-## 🔑 API Keys Setup
+Typography: Fredoka (body), Caveat (titles), and Quicksand (accents).
 
-### OpenRouter API
-1. Visit [OpenRouter](https://openrouter.ai/)
-2. Create an account and get your API key
-3. Add it to your `.env` file as `VITE_AI_API_KEY`
+Responsiveness: Optimized layouts for mobile, tablet, and desktop viewports.
 
-### Unsplash API
-1. Visit [Unsplash Developers](https://unsplash.com/developers)
-2. Create an application to get your access key
-3. Add it to your `.env` file as `VITE_UNSPLASH_ACCESS_KEY`
+Animation: Smooth transitions and hover effects to improve visual interactivity.
 
-## 📁 Project Structure
+Dark Mode: Complete alternate color scheme with consistent aesthetic detailing.
 
-```
+Technology Stack
+Layer	Technologies Used
+Frontend	React 19, Tailwind CSS
+APIs	OpenRouter API (AI Prompt Enhancement), Unsplash API (Image Search)
+State Management	React Hooks, Context API
+Utilities & Libraries	React Icons, React Modal, React Masonry CSS
+Storage	Local Storage (Theme, Favorites, Collections, Search History)
+Project Structure
 src/
-├── App.jsx                 # Main application component
-├── main.jsx               # Application entry point
-├── assets/
-│   └── vr.jpeg           # Background image
-├── components/
-│   ├── Header.jsx        # Theme toggle header
-│   ├── SearchBar.jsx     # Search input component
-│   ├── ImageGallery.jsx  # Masonry image grid
-│   ├── ImageModal.jsx    # Fullscreen image modal
-│   ├── CollectionsModal.jsx # Collections management
-│   └── KeywordHistory.jsx # Search history chips
-├── context/
-│   ├── ThemeContext.js   # Context creation
-│   └── ThemeContext.jsx  # Dark/light theme provider
-├── pages/
-│   ├── Collections.jsx   # Collections page
-│   └── Favorites.jsx    # Favorites page
-├── utils/
-│   └── localStorageHelpers.js # Local storage utilities
-└── index.css             # Global styles and fonts
-```
+├── App.jsx                   # Main application component
+├── main.jsx                  # Application entry point
+├── assets/                   # Static assets and images
+├── components/               # Reusable UI components
+│   ├── Header.jsx
+│   ├── SearchBar.jsx
+│   ├── ImageGallery.jsx
+│   ├── ImageModal.jsx
+│   ├── CollectionsModal.jsx
+│   └── KeywordHistory.jsx
+├── pages/                    # Dedicated pages for features
+│   ├── Collections.jsx
+│   └── Favorites.jsx
+├── context/                  # Context and theme management
+│   ├── ThemeContext.js
+│   └── ThemeContext.jsx
+├── utils/                    # Utility functions and helpers
+│   └── localStorageHelpers.js
+└── index.css                 # Global styles and font imports
 
-## 🎯 Usage Guide
+Setup Instructions
+Prerequisites
 
-### Basic Search
-1. Enter a keyword or mood in the search bar
-2. Optionally check "Enhance my prompt before searching"
-3. Press Enter or click to search
-4. View generated keywords and copy them if needed
-5. Browse images in the masonry grid
+Node.js (v16 or higher)
 
-### Saving Images
-- **Favorites**: Click the heart icon on any image
-- **Collections**: Click the folder icon in the modal to save to collections
-- **Download**: Use the download buttons in the modal for different formats
+npm or yarn package manager
 
-### Navigation
-- **Favorites**: Click the heart button to view all favorited images
-- **Collections**: Click the folder button to manage your collections
-- **Back to Search**: Use the back button to return to the main search
+API keys from OpenRouter and Unsplash
 
-## 🎨 Customization
+Installation Steps
 
-### Colors
-The app uses a custom peach color palette defined in `tailwind.config.js`:
-- Primary: `#fcdedc` (peach-100)
-- Secondary: `#fbb6ce` (peach-200)
-- Accent: `#ec4899` (peach-500)
+Clone the Repository
 
-### Fonts
-- **Fredoka**: Main body text
-- **Caveat**: Titles and headings
-- **Quicksand**: Accent text
+git clone <repository-url>
+cd visual-ramble
 
-## 🔧 Development
 
-### Available Scripts
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
-- `npm run lint` - Run ESLint
+Install Dependencies
 
-### Adding New Features
-1. Create new components in the `components/` directory
-2. Add new pages in the `pages/` directory
-3. Update the main App.jsx to include new routes
-4. Add any new utilities to `utils/` directory
+npm install
 
-## 📱 Responsive Design
 
-The app is fully responsive with breakpoints:
-- **Mobile**: 1 column layout
-- **Tablet**: 2-3 column layout
-- **Desktop**: 4 column layout
+Set Up Environment Variables
+Create a .env file in the root directory and add:
 
-## 🌟 Future Enhancements
+VITE_AI_API_KEY=your_openrouter_api_key
+VITE_UNSPLASH_ACCESS_KEY=your_unsplash_access_key
 
-- [ ] Advanced image cropping with react-easy-crop
-- [ ] Social sharing functionality
-- [ ] User accounts and cloud sync
-- [ ] Advanced filters and sorting
-- [ ] Image editing tools
-- [ ] Export collections as PDF
-- [ ] Keyboard shortcuts
-- [ ] Progressive Web App (PWA) features
 
-## 🤝 Contributing
+Start the Development Server
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+npm run dev
 
-## 📄 License
+
+Access the Application
+Open your browser and navigate to http://localhost:5173
+
+Usage
+Performing a Search
+
+Enter a descriptive phrase or keyword in the search bar.
+
+Optionally enable “Enhance my prompt” for AI optimization.
+
+View generated keywords and corresponding image results.
+
+Copy keywords or browse images directly in the gallery.
+
+Image Management
+
+Favorites: Click the heart icon to save images.
+
+Collections: Add images to named collections for organization.
+
+Downloads: Choose wallpaper or original image formats.
+
+Modal View: Click any image to view it in fullscreen mode.
+
+Development and Maintenance
+Available Scripts
+Command	Description
+npm run dev	Start the development server
+npm run build	Build the project for production
+npm run preview	Preview the production build
+npm run lint	Run ESLint checks
+Customization
+
+Colors: Defined in tailwind.config.js (peach color palette).
+
+Fonts: Managed through Google Fonts in index.css.
+
+Components: Modular structure allows easy feature extension.
+
+Future Enhancements
+
+Integration of react-easy-crop for advanced image cropping
+
+Social media sharing for saved collections
+
+User authentication and cloud sync
+
+Advanced filters and sort options
+
+Offline support / PWA capabilities
+
+Export collections as PDF
+
+License
 
 This project is licensed under the MIT License.
 
-## 🙏 Acknowledgments
+Acknowledgments
 
-- [Unsplash](https://unsplash.com/) for beautiful images
-- [OpenRouter](https://openrouter.ai/) for AI capabilities
-- [Tailwind CSS](https://tailwindcss.com/) for styling
-- [React Icons](https://react-icons.github.io/react-icons/) for icons
+Unsplash
+ — Image resources
 
----
+OpenRouter
+ — AI-based text enhancement
 
-Made with ❤️ and lots of ☕
+Tailwind CSS
+ — Utility-first CSS framework
+
+React Icons
+ — Icon components
