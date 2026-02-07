@@ -1,151 +1,139 @@
-import React, { useState } from 'react';
-import { FiX, FiDownload, FiHeart, FiFolder } from 'react-icons/fi';
+import { useState, useEffect } from 'react';
+import { FiX, FiDownload, FiHeart, FiFolder, FiExternalLink } from 'react-icons/fi';
 import CollectionsModal from './CollectionsModal';
-import './ImageModal.css';
 
 const ImageModal = ({ image, onClose }) => {
-  const [favorites, setFavorites] = useState(JSON.parse(localStorage.getItem('favorites')) || []);
-  const [showCollectionsModal, setShowCollectionsModal] = useState(false);
-  const [downloadStatus, setDownloadStatus] = useState('');
+  const [favorites, setFavorites] = useState(
+    JSON.parse(localStorage.getItem('favorites')) || []
+  );
+  const [showCollections, setShowCollections] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
-  const isFavorited = favorites.some(f => f.id === image.id);
+  const isFav = favorites.some((f) => f.id === image.id);
+
+  useEffect(() => {
+    const handleEsc = (e) => e.key === 'Escape' && onClose();
+    document.addEventListener('keydown', handleEsc);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', handleEsc);
+      document.body.style.overflow = '';
+    };
+  }, [onClose]);
 
   const toggleFavorite = () => {
-    const updated = isFavorited
-      ? favorites.filter(f => f.id !== image.id)
+    const updated = isFav
+      ? favorites.filter((f) => f.id !== image.id)
       : [...favorites, image];
     setFavorites(updated);
     localStorage.setItem('favorites', JSON.stringify(updated));
   };
 
-  const downloadImage = async (type = 'original') => {
+  const handleDownload = async () => {
     try {
-      setDownloadStatus('downloading');
-      
-      // Use the direct download method for better compatibility
+      setDownloading(true);
       const link = document.createElement('a');
-      
-      if (type === 'desktop') {
-        link.download = `wallpaper-desktop-${image.id}.jpg`;
-      } else if (type === 'mobile') {
-        link.download = `wallpaper-mobile-${image.id}.jpg`;
-      } else {
-        link.download = `image-${image.id}.jpg`;
-      }
-      
-      // Use the full resolution image URL
       link.href = image.urls.full;
+      link.download = `visual-ramble-${image.id}.jpg`;
       link.target = '_blank';
-      
-      // Add to DOM, click, and remove
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
-      setDownloadStatus('success');
-      setTimeout(() => setDownloadStatus(''), 2000);
-      
-    } catch (error) {
-      console.error('Download failed:', error);
-      setDownloadStatus('error');
-      setTimeout(() => setDownloadStatus(''), 2000);
+    } finally {
+      setTimeout(() => setDownloading(false), 1500);
     }
-  };
-
-  const handleSaveToCollection = (collection) => {
-    // The collection is already saved in CollectionsModal
-    // This callback can be used for additional actions if needed
-    console.log(`Image saved to collection: ${collection.name}`);
   };
 
   return (
     <>
-      <div className="modal-overlay" onClick={onClose}>
-        <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-          {/* Action Buttons */}
-          <div className="absolute top-4 right-4 flex gap-2 z-10">
-            <button
-              onClick={toggleFavorite}
-              className="modal-btn"
-              title={isFavorited ? "Remove from favorites" : "Add to favorites"}
-            >
-              <FiHeart fill={isFavorited ? "hotpink" : "none"} />
-            </button>
-            <button
-              onClick={() => setShowCollectionsModal(true)}
-              className="modal-btn"
-              title="Save to collection"
-            >
-              <FiFolder />
-            </button>
-            <button onClick={onClose} className="modal-btn">
-              <FiX />
-            </button>
-          </div>
-
-          {/* Main Image */}
-          <img 
-            src={image.urls.full} 
-            alt={image.alt_description} 
-            className="modal-image" 
-          />
-
-          {/* Download Buttons */}
-          <div className="absolute bottom-4 left-4 right-4 flex gap-2 justify-center">
-            <button
-              onClick={() => downloadImage('original')}
-              className="bg-white/90 hover:bg-white text-gray-700 px-4 py-2 rounded-full font-fredoka text-sm transition-colors shadow-lg flex items-center"
-              disabled={downloadStatus === 'downloading'}
-            >
-              <FiDownload className="mr-2" />
-              {downloadStatus === 'downloading' ? 'Downloading...' : 'Download Image'}
-            </button>
-            <button
-              onClick={() => downloadImage('desktop')}
-              className="bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded-full font-fredoka text-sm transition-colors shadow-lg"
-              disabled={downloadStatus === 'downloading'}
-            >
-              Desktop Wallpaper
-            </button>
-            <button
-              onClick={() => downloadImage('mobile')}
-              className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-full font-fredoka text-sm transition-colors shadow-lg"
-              disabled={downloadStatus === 'downloading'}
-            >
-              Mobile Wallpaper
-            </button>
-          </div>
-
-          {/* Download Status */}
-          {downloadStatus && (
-            <div className="absolute top-20 left-1/2 transform -translate-x-1/2 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg">
-              <p className="text-sm font-fredoka">
-                {downloadStatus === 'success' ? '✅ Downloaded successfully!' : 
-                 downloadStatus === 'error' ? '❌ Download failed' : 
-                 '⏳ Downloading...'}
-              </p>
+      <div
+        className="fixed inset-0 z-50 bg-charcoal/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
+        onClick={onClose}
+      >
+        <div
+          className="relative bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden animate-scale-in"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Top bar */}
+          <div className="flex items-center justify-between p-4 border-b border-cloud">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={toggleFavorite}
+                className={`p-2 rounded-lg transition-all duration-200
+                  ${isFav
+                    ? 'bg-rose-50 text-rose-500'
+                    : 'hover:bg-linen text-ash hover:text-charcoal'
+                  }`}
+                title={isFav ? 'Unfavorite' : 'Favorite'}
+              >
+                <FiHeart size={18} fill={isFav ? 'currentColor' : 'none'} />
+              </button>
+              <button
+                onClick={() => setShowCollections(true)}
+                className="p-2 rounded-lg hover:bg-linen text-ash hover:text-charcoal transition-all duration-200"
+                title="Save to collection"
+              >
+                <FiFolder size={18} />
+              </button>
+              <button
+                onClick={handleDownload}
+                disabled={downloading}
+                className="p-2 rounded-lg hover:bg-linen text-ash hover:text-charcoal transition-all duration-200"
+                title="Download"
+              >
+                <FiDownload size={18} />
+              </button>
             </div>
-          )}
+            <button
+              onClick={onClose}
+              className="p-2 rounded-lg hover:bg-linen text-ash hover:text-charcoal transition-all duration-200"
+            >
+              <FiX size={18} />
+            </button>
+          </div>
 
-          {/* Image Info */}
-          <div className="absolute bottom-16 left-4 right-4 bg-white/90 backdrop-blur-sm rounded-xl p-4">
-            <p className="text-gray-700 font-fredoka text-sm">
-              {image.alt_description || "Beautiful image"}
-            </p>
-            <p className="text-gray-500 text-xs mt-1">
-              Photo by {image.user?.name || "Unknown"} on Unsplash
-            </p>
+          {/* Image */}
+          <div className="flex items-center justify-center bg-linen overflow-hidden">
+            <img
+              src={image.urls.regular}
+              alt={image.alt_description || 'Image'}
+              className="max-h-[65vh] w-auto object-contain"
+            />
+          </div>
+
+          {/* Info */}
+          <div className="p-4 border-t border-cloud">
+            <div className="flex items-center justify-between">
+              <div className="min-w-0 flex-1">
+                <p className="text-sm text-charcoal font-medium truncate">
+                  {image.alt_description || 'Untitled'}
+                </p>
+                <p className="text-xs text-ash mt-0.5">
+                  Photo by {image.user?.name || 'Unknown'} on Unsplash
+                </p>
+              </div>
+              {image.links?.html && (
+                <a
+                  href={image.links.html}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-ash hover:text-mist-500 transition-colors ml-3 flex-shrink-0"
+                  title="View on Unsplash"
+                >
+                  <FiExternalLink size={16} />
+                </a>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Collections Modal */}
-      {showCollectionsModal && (
+      {showCollections && (
         <CollectionsModal
-          isOpen={showCollectionsModal}
-          onClose={() => setShowCollectionsModal(false)}
+          isOpen={showCollections}
+          onClose={() => setShowCollections(false)}
           image={image}
-          onSave={handleSaveToCollection}
+          onSave={() => setShowCollections(false)}
         />
       )}
     </>

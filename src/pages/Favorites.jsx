@@ -1,107 +1,95 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { FiArrowLeft, FiHeart, FiTrash2 } from 'react-icons/fi';
 import ImageModal from '../components/ImageModal';
 import Masonry from 'react-masonry-css';
-import '../components/ImageGallery.css';
 
 const Favorites = ({ onBack }) => {
   const [favorites, setFavorites] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null);
 
   useEffect(() => {
-    const savedFavorites = JSON.parse(localStorage.getItem('favorites')) || [];
-    setFavorites(savedFavorites);
+    setFavorites(JSON.parse(localStorage.getItem('favorites')) || []);
   }, []);
 
-  const removeFavorite = (imageId) => {
-    const updatedFavorites = favorites.filter(img => img.id !== imageId);
-    setFavorites(updatedFavorites);
-    localStorage.setItem('favorites', JSON.stringify(updatedFavorites));
+  const removeFavorite = (id) => {
+    const updated = favorites.filter((img) => img.id !== id);
+    setFavorites(updated);
+    localStorage.setItem('favorites', JSON.stringify(updated));
   };
 
-  const breakpointColumnsObj = {
-    default: 4,
-    1400: 3,
-    1100: 2,
-    700: 1,
-  };
+  const breakpoints = { default: 4, 1280: 3, 900: 2, 640: 2 };
 
   return (
-    <div className="min-h-screen bg-[#fcdedc] transition-colors duration-300">
-      {/* Header */}
-      <div className="bg-white/80 backdrop-blur-sm border-b border-pink-200">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <button
-              onClick={onBack}
-              className="flex items-center gap-2 text-gray-600 hover:text-pink-500 transition-colors font-fredoka"
-            >
-              <FiArrowLeft size={20} />
-              Back to Search
-            </button>
-            <h1 className="text-2xl font-caveat text-gray-900">
-              My Favorites
-            </h1>
-            <div className="w-8"></div> {/* Spacer for centering */}
+    <div className="min-h-screen bg-cream">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+        <div className="flex items-center gap-3 mb-8">
+          <button
+            onClick={onBack}
+            className="p-2 rounded-lg hover:bg-linen text-ash hover:text-charcoal transition-colors"
+          >
+            <FiArrowLeft size={18} />
+          </button>
+          <div>
+            <h1 className="text-xl font-semibold text-charcoal">Favorites</h1>
+            <p className="text-sm text-ash">
+              {favorites.length} image{favorites.length !== 1 ? 's' : ''} saved
+            </p>
           </div>
         </div>
-      </div>
 
-      {/* Favorites Grid */}
-      <div className="max-w-7xl mx-auto px-4 py-8">
         {favorites.length === 0 ? (
-          <div className="text-center py-16">
-            <FiHeart size={64} className="mx-auto text-gray-400 mb-4" />
-            <h3 className="text-xl font-caveat text-gray-600 mb-2">
-              No Favorites Yet
+          <div className="text-center py-20">
+            <div className="w-16 h-16 rounded-2xl bg-linen flex items-center justify-center mx-auto mb-4">
+              <FiHeart className="text-ash" size={24} />
+            </div>
+            <h3 className="text-base font-medium text-charcoal mb-1">
+              No favorites yet
             </h3>
-            <p className="text-gray-500 font-fredoka">
-              Start hearting images to see them here!
+            <p className="text-sm text-ash">
+              Heart images to save them here
             </p>
           </div>
         ) : (
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-caveat text-gray-700">
-                {favorites.length} favorite{favorites.length !== 1 ? 's' : ''}
-              </h2>
-            </div>
-            
-            <div className="image-gallery-container">
-              <Masonry
-                breakpointCols={breakpointColumnsObj}
-                className="my-masonry-grid"
-                columnClassName="my-masonry-grid_column"
+          <Masonry
+            breakpointCols={breakpoints}
+            className="flex -ml-4"
+            columnClassName="pl-4 bg-clip-padding"
+          >
+            {favorites.map((img) => (
+              <div
+                key={img.id}
+                className="mb-4 relative group rounded-xl overflow-hidden cursor-pointer"
+                onClick={() => setSelectedImage(img)}
               >
-                {favorites.map((img) => (
-                  <div key={img.id} className="image-item">
-                    <img
-                      src={img.urls.regular}
-                      alt={img.alt_description}
-                      onClick={() => setSelectedImage(img)}
-                      className="image-tile"
-                    />
-                    <div className="absolute bottom-4 right-4 flex gap-2">
-                      <button
-                        onClick={() => removeFavorite(img.id)}
-                        className="favorite-button bg-red-500 hover:bg-red-600"
-                        title="Remove from favorites"
-                      >
-                        <FiTrash2 size={18} />
-                      </button>
-                      <div className="favorite-button bg-pink-500">
-                        <FiHeart size={18} fill="white" />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </Masonry>
-            </div>
-          </div>
+                <img
+                  src={img.urls.regular}
+                  alt={img.alt_description}
+                  className="w-full block rounded-xl transition-transform duration-300 group-hover:scale-[1.02]"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-charcoal/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl" />
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeFavorite(img.id);
+                  }}
+                  className="absolute top-3 right-3 p-2 rounded-full bg-white/80 text-ash hover:text-red-400 hover:bg-white opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-sm"
+                  title="Remove from favorites"
+                >
+                  <FiTrash2 size={14} />
+                </button>
+                <div className="absolute bottom-3 left-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <FiHeart
+                    size={14}
+                    className="text-rose-400"
+                    fill="currentColor"
+                  />
+                </div>
+              </div>
+            ))}
+          </Masonry>
         )}
       </div>
 
-      {/* Image Modal */}
       {selectedImage && (
         <ImageModal
           image={selectedImage}

@@ -1,138 +1,150 @@
-import React, { useState, useEffect } from 'react';
-import { FiArrowLeft, FiFolder, FiTrash2, FiEye } from 'react-icons/fi';
+import { useState, useEffect } from 'react';
+import { FiArrowLeft, FiFolder, FiTrash2, FiChevronRight } from 'react-icons/fi';
 import ImageModal from '../components/ImageModal';
-import '../components/ImageGallery.css';
+import Masonry from 'react-masonry-css';
 
 const Collections = ({ onBack }) => {
   const [collections, setCollections] = useState([]);
+  const [expandedId, setExpandedId] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
 
   useEffect(() => {
-    const savedCollections = JSON.parse(localStorage.getItem('collections')) || [];
-    setCollections(savedCollections);
+    setCollections(JSON.parse(localStorage.getItem('collections')) || []);
   }, []);
 
-  const deleteCollection = (collectionId) => {
-    const updatedCollections = collections.filter(col => col.id !== collectionId);
-    setCollections(updatedCollections);
-    localStorage.setItem('collections', JSON.stringify(updatedCollections));
+  const deleteCollection = (id) => {
+    const updated = collections.filter((c) => c.id !== id);
+    setCollections(updated);
+    localStorage.setItem('collections', JSON.stringify(updated));
   };
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
+  const expanded = collections.find((c) => c.id === expandedId);
+  const breakpoints = { default: 3, 1024: 2, 640: 2 };
 
   return (
-    <div className="min-h-screen bg-[#fcdedc] transition-colors duration-300">
-      {/* Header */}
-      <div className="bg-white/80 backdrop-blur-sm border-b border-pink-200">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <button
-              onClick={onBack}
-              className="flex items-center gap-2 text-gray-600 hover:text-pink-500 transition-colors font-fredoka"
-            >
-              <FiArrowLeft size={20} />
-              Back to Search
-            </button>
-            <h1 className="text-2xl font-caveat text-gray-900">
-              My Collections
+    <div className="min-h-screen bg-cream">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
+        <div className="flex items-center gap-3 mb-8">
+          <button
+            onClick={expandedId ? () => setExpandedId(null) : onBack}
+            className="p-2 rounded-lg hover:bg-linen text-ash hover:text-charcoal transition-colors"
+          >
+            <FiArrowLeft size={18} />
+          </button>
+          <div>
+            <h1 className="text-xl font-semibold text-charcoal">
+              {expandedId ? expanded?.name : 'Collections'}
             </h1>
-            <div className="w-8"></div> {/* Spacer for centering */}
-          </div>
-        </div>
-      </div>
-
-      {/* Collections Grid */}
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {collections.length === 0 ? (
-          <div className="text-center py-16">
-            <FiFolder size={64} className="mx-auto text-gray-400 mb-4" />
-            <h3 className="text-xl font-caveat text-gray-600 mb-2">
-              No Collections Yet
-            </h3>
-            <p className="text-gray-500 font-fredoka">
-              Start saving images to create your first collection!
+            <p className="text-sm text-ash">
+              {expandedId
+                ? `${expanded?.images.length || 0} images`
+                : `${collections.length} collection${collections.length !== 1 ? 's' : ''}`}
             </p>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {collections.map((collection) => (
-              <div
-                key={collection.id}
-                className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-pink-200"
-              >
-                {/* Collection Header */}
-                <div className="p-6 border-b border-pink-100">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-lg font-caveat text-gray-900 mb-1">
-                        {collection.name}
-                      </h3>
-                      <p className="text-sm text-gray-500 font-fredoka">
-                        {collection.images.length} images • {formatDate(collection.createdAt)}
+        </div>
+
+        {!expandedId ? (
+          /* Collection cards */
+          collections.length === 0 ? (
+            <div className="text-center py-20">
+              <div className="w-16 h-16 rounded-2xl bg-linen flex items-center justify-center mx-auto mb-4">
+                <FiFolder className="text-ash" size={24} />
+              </div>
+              <h3 className="text-base font-medium text-charcoal mb-1">
+                No collections yet
+              </h3>
+              <p className="text-sm text-ash">
+                Save images to collections to organize them
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {collections.map((col) => (
+                <div
+                  key={col.id}
+                  className="bg-white rounded-2xl border border-cloud overflow-hidden hover:shadow-md transition-all duration-200 group"
+                >
+                  {/* Preview images */}
+                  <div
+                    className="h-36 bg-linen grid grid-cols-3 gap-0.5 cursor-pointer overflow-hidden"
+                    onClick={() => setExpandedId(col.id)}
+                  >
+                    {col.images.slice(0, 3).map((img, i) => (
+                      <img
+                        key={img.id}
+                        src={img.urls.small}
+                        alt=""
+                        className={`w-full h-full object-cover ${
+                          i === 0 ? 'col-span-2 row-span-1' : ''
+                        }`}
+                      />
+                    ))}
+                    {col.images.length === 0 && (
+                      <div className="col-span-3 flex items-center justify-center">
+                        <FiFolder className="text-cloud" size={32} />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="p-3 flex items-center justify-between">
+                    <div
+                      className="cursor-pointer flex-1"
+                      onClick={() => setExpandedId(col.id)}
+                    >
+                      <p className="text-sm font-medium text-charcoal">
+                        {col.name}
+                      </p>
+                      <p className="text-xs text-ash">
+                        {col.images.length} images
                       </p>
                     </div>
-                    <button
-                      onClick={() => deleteCollection(collection.id)}
-                      className="text-gray-400 hover:text-red-500 transition-colors p-2"
-                      title="Delete collection"
-                    >
-                      <FiTrash2 size={16} />
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => deleteCollection(col.id)}
+                        className="p-1.5 rounded-lg text-ash hover:text-red-400 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
+                      >
+                        <FiTrash2 size={14} />
+                      </button>
+                      <button
+                        onClick={() => setExpandedId(col.id)}
+                        className="p-1.5 rounded-lg text-ash hover:text-charcoal hover:bg-linen transition-colors"
+                      >
+                        <FiChevronRight size={14} />
+                      </button>
+                    </div>
                   </div>
                 </div>
-
-                {/* Images Grid */}
-                <div className="p-6">
-                  {collection.images.length === 0 ? (
-                    <div className="text-center py-8 text-gray-400">
-                      <p className="font-fredoka">No images yet</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {collection.images.slice(0, 3).map((image, index) => (
-                        <div key={image.id} className="relative">
-                          <img
-                            src={image.urls.regular}
-                            alt={image.alt_description}
-                            className="w-full h-32 object-cover rounded-lg cursor-pointer transition-transform duration-200 hover:scale-105"
-                            onClick={() => setSelectedImage(image)}
-                          />
-                          {index === 2 && collection.images.length > 3 && (
-                            <div className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center">
-                              <span className="text-white font-fredoka text-sm">
-                                +{collection.images.length - 3} more
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* View All Button */}
-                  {collection.images.length > 0 && (
-                    <button
-                      onClick={() => setSelectedImage(collection.images[0])}
-                      className="w-full mt-4 flex items-center justify-center gap-2 py-2 px-4 bg-pink-100 text-pink-600 rounded-lg hover:bg-pink-200 transition-colors font-fredoka text-sm"
-                    >
-                      <FiEye size={16} />
-                      View All Images
-                    </button>
-                  )}
-                </div>
+              ))}
+            </div>
+          )
+        ) : /* Expanded collection */
+        expanded?.images.length === 0 ? (
+          <div className="text-center py-20">
+            <p className="text-sm text-ash">This collection is empty</p>
+          </div>
+        ) : (
+          <Masonry
+            breakpointCols={breakpoints}
+            className="flex -ml-4"
+            columnClassName="pl-4 bg-clip-padding"
+          >
+            {expanded.images.map((img) => (
+              <div
+                key={img.id}
+                className="mb-4 rounded-xl overflow-hidden cursor-pointer group"
+                onClick={() => setSelectedImage(img)}
+              >
+                <img
+                  src={img.urls.regular}
+                  alt={img.alt_description}
+                  className="w-full block rounded-xl transition-transform duration-300 group-hover:scale-[1.02]"
+                />
               </div>
             ))}
-          </div>
+          </Masonry>
         )}
       </div>
 
-      {/* Image Modal */}
       {selectedImage && (
         <ImageModal
           image={selectedImage}

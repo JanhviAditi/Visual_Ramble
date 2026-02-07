@@ -1,15 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import SearchBar from './components/SearchBar';
 import ImageGallery from './components/ImageGallery';
 import ImageModal from './components/ImageModal';
 import Header from './components/Header';
-import KeywordHistory from './components/KeywordHistory';
 import Collections from './pages/Collections';
 import Favorites from './pages/Favorites';
-import vr from './assets/vr.jpeg';
 import './App.css';
 import InfiniteScroll from 'react-infinite-scroll-component';
-import { FiHeart, FiFolder } from 'react-icons/fi';
+import { FiCopy, FiCheck, FiSearch } from 'react-icons/fi';
 
 function App() {
   const [images, setImages] = useState([]);
@@ -19,241 +17,295 @@ function App() {
   const [copied, setCopied] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [keywordHistory, setKeywordHistory] = useState([]);
-  const [currentPage, setCurrentPage] = useState('search'); // 'search', 'collections', 'favorites'
+  const [currentPage, setCurrentPage] = useState('search');
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
-    const history = JSON.parse(localStorage.getItem('keywordHistory')) || [];
-    setKeywordHistory(history);
+    setKeywordHistory(JSON.parse(localStorage.getItem('keywordHistory')) || []);
+  }, []);
+
+  const fetchImages = useCallback(async (keywords, pageNumber, { signal } = {}) => {
+    const apiKey = import.meta.env.VITE_UNSPLASH_ACCESS_KEY;
+    if (!apiKey) {
+      console.error(
+        'Unsplash API key not configured. Copy .env.example to .env and add your key.'
+      );
+      return false;
+    }
+    const query = keywords.replace(/\n/g, ',').trim();
+    const url = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&page=${pageNumber}&per_page=20&client_id=${apiKey}`;
+
+    try {
+      const res = await fetch(url, { signal });
+      const data = await res.json();
+      if (data.results?.length > 0) {
+        setImages((prev) =>
+          pageNumber === 1 ? data.results : [...prev, ...data.results]
+        );
+        setHasMore(data.results.length === 20);
+        return true;
+      } else {
+        if (pageNumber === 1) setImages([]);
+        setHasMore(false);
+        return true;
+      }
+    } catch (error) {
+      if (error.name !== 'AbortError') {
+        console.error('Error fetching images:', error);
+      }
+      setHasMore(false);
+      return false;
+    }
   }, []);
 
   const handleSearch = async (userInput) => {
-    const keywordPrompt = `Extract 5-7 clean image search keywords from this sentence: ${userInput}`;
+    setIsSearching(true);
+    setUserPrompt(userInput);
+    setShowResults(true);
+    setPage(1);
+    setHasMore(false); // prevent InfiniteScroll loader while searching
+    setImages([]);
 
-    try {
-      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${import.meta.env.VITE_AI_API_KEY}`,
-          "HTTP-Referer": "http://localhost:5173",
-          "X-Title": "Pinterest Keyword Enhancer"
-        },
-        body: JSON.stringify({
-          model: "openai/gpt-3.5-turbo",
-          messages: [{ role: "user", content: keywordPrompt }]
-        })
-      });
+    // Update history
+    const newHistory = [...new Set([userInput, ...keywordHistory])].slice(0, 15);
+    setKeywordHistory(newHistory);
+    localStorage.setItem('keywordHistory', JSON.stringify(newHistory));
 
-      const data = await response.json();
+    const aiKey = import.meta.env.VITE_AI_API_KEY;
+    let searchKeywords = userInput;
 
-      if (data.choices?.[0]?.message) {
-        const keywords = data.choices[0].message.content;
-        const cleaned = keywords.replace(/\d+\.\s*/g, '').replace(/\n/g, ', ').trim();
+    if (aiKey) {
+      // AI-enhanced keyword extraction
+      try {
+        const response = await fetch(
+          'https://openrouter.ai/api/v1/chat/completions',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${aiKey}`,
+              'HTTP-Referer': window.location.origin,
+              'X-Title': 'Visual Ramble',
+            },
+            body: JSON.stringify({
+              model: 'meta-llama/llama-3.1-8b-instruct:free',
+              messages: [
+                {
+                  role: 'user',
+                  content: `Extract 5-7 clean, comma-separated image search keywords from: "${userInput}". Return ONLY the keywords, nothing else.`,
+                },
+              ],
+            }),
+          }
+        );
 
-        setGeneratedKeywords(keywords);
-        setUserPrompt(userInput);
-        setShowResults(true);
-        setPage(1);
-        setHasMore(true);
-        setImages([]);
-        fetchImages(cleaned, 1);
-
-        const newHistory = [...new Set([userInput, ...keywordHistory])].slice(0, 10);
-        setKeywordHistory(newHistory);
-        localStorage.setItem('keywordHistory', JSON.stringify(newHistory));
+        const data = await response.json();
+        if (data.choices?.[0]?.message?.content) {
+          const keywords = data.choices[0].message.content.trim();
+          searchKeywords = keywords
+            .replace(/\d+\.\s*/g, '')
+            .replace(/\n/g, ', ')
+            .replace(/"/g, '')
+            .trim();
+        }
+      } catch {
+        // AI failed — fall through with original input
       }
-    } catch (error) {
-      console.error("Error calling OpenRouter API:", error);
     }
-  };
 
-  const fetchImages = async (keywords, pageNumber) => {
-    const apiKey = import.meta.env.VITE_UNSPLASH_ACCESS_KEY;
-    const query = keywords.replace(/\n/g, ',');
-    const url = `https://api.unsplash.com/search/photos?query=${query}&page=${pageNumber}&per_page=20&client_id=${apiKey}`;
-
-    try {
-      const res = await fetch(url);
-      const data = await res.json();
-      
-      if (data.results && data.results.length > 0) {
-        setImages(prev => pageNumber === 1 ? data.results : [...prev, ...data.results]);
-        setHasMore(data.results.length === 20); // If we get less than 20, we've reached the end
-      } else {
-        setHasMore(false);
-      }
-    } catch (error) {
-      console.error("Error fetching images:", error);
-      setHasMore(false);
-    }
+    setGeneratedKeywords(searchKeywords);
+    await fetchImages(searchKeywords, 1);
+    setIsSearching(false);
   };
 
   const loadMoreImages = () => {
     if (hasMore && generatedKeywords) {
       const nextPage = page + 1;
       setPage(nextPage);
-      const cleaned = generatedKeywords.replace(/\d+\.\s*/g, '').replace(/\n/g, ', ').trim();
-      fetchImages(cleaned, nextPage);
+      fetchImages(generatedKeywords, nextPage);
     }
   };
 
   const handleCopy = () => {
-    const text = generatedKeywords
-      .replace(/\d+\.\s*/g, '')
-      .replace(/\n/g, ', ')
-      .trim();
-
-    navigator.clipboard.writeText(text).then(() => {
+    navigator.clipboard.writeText(generatedKeywords).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     });
   };
 
-  const handleKeywordChipClick = (prompt) => {
-    handleSearch(prompt);
+  const handleDeleteHistoryItem = (item) => {
+    const updated = keywordHistory.filter((k) => k !== item);
+    setKeywordHistory(updated);
+    localStorage.setItem('keywordHistory', JSON.stringify(updated));
   };
 
-  const handleBackToSearch = () => {
-    setCurrentPage('search');
-    setShowResults(false);
-    setImages([]);
-    setSelectedImage(null);
-    setPage(1);
-    setHasMore(true);
+  const handleClearHistory = () => {
+    setKeywordHistory([]);
+    localStorage.removeItem('keywordHistory');
   };
 
-  const renderSearchPage = () => (
-    <>
-      {!showResults ? (
-        <div
-          className="flex items-center justify-center h-screen bg-cover bg-center"
-          style={{ backgroundImage: `url(${vr})` }}
-        >
-          <div className="bg-white/70 backdrop-blur-sm p-8 rounded-xl shadow-xl text-center max-w-xl mx-auto">
-            <h1 className="text-4xl sm:text-5xl mb-8 font-caveat text-black text-center">
-              What's your aesthetic today?
-            </h1>
-            <SearchBar
-              onSearch={handleSearch}
-              placeholder="Give me a keyword or a whole mood"
-            />
+  const handleNavigate = (targetPage) => {
+    setCurrentPage(targetPage);
+    if (targetPage === 'search') {
+      setShowResults(false);
+      setImages([]);
+      setSelectedImage(null);
+      setPage(1);
+      setHasMore(true);
+      setGeneratedKeywords('');
+    }
+  };
 
-            <KeywordHistory 
-              history={keywordHistory}
-              onKeywordClick={handleKeywordChipClick}
-            />
-          </div>
-        </div>
-      ) : (
-        <div>
-          <div
-            className="w-full py-10 px-4 md:px-12 bg-cover bg-center"
-            style={{ backgroundImage: `url(${vr})` }}
-          >
-            <div className="flex flex-col md:flex-row gap-6 justify-center items-center">
-              {/* Prompt Card */}
-              <div className="bg-white/80 backdrop-blur-sm p-4 rounded-2xl shadow-md w-full md:w-1/2 text-center">
-                <h3 className="font-caveat text-xl mb-2 text-gray-900">Entered Prompt</h3>
-                <p className="font-fredoka text-gray-700">{userPrompt}</p>
-              </div>
+  // ── Home page ──
+  const renderHome = () => (
+    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-60px)] px-4">
+      <div className="text-center mb-10 animate-fade-in">
+        <h1 className="font-display text-4xl sm:text-5xl md:text-6xl text-charcoal mb-3 tracking-tight">
+          Visual Ramble
+        </h1>
+        <p className="text-ash text-base sm:text-lg max-w-md mx-auto leading-relaxed">
+          Discover images that match your mood
+        </p>
+      </div>
 
-              {/* Keywords Card */}
-              <div className="bg-[#fcdedc] p-4 rounded-2xl shadow-md w-full md:w-1/2 text-center">
-                <h3 className="font-caveat text-xl mb-2 text-gray-900">Generated Keywords</h3>
-                <p className="font-fredoka text-gray-700 mb-3">
-                  {generatedKeywords.replace(/\d+\.\s*/g, '').replace(/\n/g, ', ')}
-                </p>
-                <button
-                  onClick={handleCopy}
-                  className="bg-pink-400 hover:bg-pink-500 text-white text-sm font-semibold px-4 py-2 rounded-full transition duration-300"
+      <div className="w-full max-w-xl animate-slide-up">
+        <SearchBar
+          onSearch={handleSearch}
+          placeholder="Describe your aesthetic..."
+          history={keywordHistory}
+          onDeleteHistoryItem={handleDeleteHistoryItem}
+          onClearHistory={handleClearHistory}
+        />
+      </div>
+
+      <p className="mt-8 text-xs text-stone-400 animate-fade-in">
+        Try: &ldquo;cozy rainy afternoon&rdquo; or &ldquo;minimal Scandinavian&rdquo;
+      </p>
+    </div>
+  );
+
+  // ── Results page ──
+  const renderResults = () => (
+    <div className="min-h-screen">
+      {/* Sticky search header */}
+      <div className="sticky top-[53px] z-30 bg-cream/80 backdrop-blur-md border-b border-cloud/50">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3">
+          <SearchBar
+            onSearch={handleSearch}
+            placeholder="Search again..."
+            history={keywordHistory}
+            onDeleteHistoryItem={handleDeleteHistoryItem}
+            onClearHistory={handleClearHistory}
+            compact
+          />
+
+          {/* Keywords bar */}
+          {generatedKeywords && generatedKeywords !== userPrompt && (
+            <div className="flex items-center gap-2 mt-2 flex-wrap">
+              <span className="text-xs text-ash">Keywords:</span>
+              {generatedKeywords.split(',').map((kw, i) => (
+                <span
+                  key={i}
+                  className="text-xs px-2 py-0.5 bg-mist-50 text-mist-600 rounded-full"
                 >
-                  {copied ? 'Copied!' : 'Copy Keywords'}
-                </button>
-              </div>
+                  {kw.trim()}
+                </span>
+              ))}
+              <button
+                onClick={handleCopy}
+                className="text-xs px-2 py-0.5 rounded-full bg-sage-50 text-sage-600 hover:bg-sage-100 transition-colors flex items-center gap-1"
+              >
+                {copied ? (
+                  <>
+                    <FiCheck size={10} /> Copied
+                  </>
+                ) : (
+                  <>
+                    <FiCopy size={10} /> Copy
+                  </>
+                )}
+              </button>
             </div>
-          </div>
-
-          {/* Navigation Buttons */}
-          <div className="flex justify-center gap-4 py-4 bg-white/50 backdrop-blur-sm">
-            <button
-              onClick={() => setCurrentPage('favorites')}
-              className="flex items-center gap-2 px-4 py-2 bg-pink-100 text-pink-600 rounded-full hover:bg-pink-200 transition-colors font-fredoka"
-            >
-              <FiHeart />
-              Favorites
-            </button>
-            <button
-              onClick={() => setCurrentPage('collections')}
-              className="flex items-center gap-2 px-4 py-2 bg-purple-100 text-purple-600 rounded-full hover:bg-purple-200 transition-colors font-fredoka"
-            >
-              <FiFolder />
-              Collections
-            </button>
-          </div>
-
-          {/* Infinite Scroll Image Gallery */}
-          <InfiniteScroll
-            dataLength={images.length}
-            next={loadMoreImages}
-            hasMore={hasMore}
-            loader={
-              <div className="text-center py-8">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-pink-500"></div>
-                <p className="mt-2 text-gray-600 font-fredoka">Loading more images...</p>
-              </div>
-            }
-            endMessage={
-              <div className="text-center py-8">
-                <p className="text-gray-600 font-fredoka">No more images to load</p>
-              </div>
-            }
-          >
-            <div className="px-4 py-8">
-              {images.length > 0 ? (
-                <ImageGallery
-                  images={images}
-                  onImageClick={(img) => setSelectedImage(img)}
-                />
-              ) : (
-                <div className="text-center py-16">
-                  <h3 className="text-xl font-caveat text-gray-600 mb-2">
-                    No images found
-                  </h3>
-                  <p className="text-gray-500 font-fredoka">
-                    Try adjusting your search terms
-                  </p>
-                </div>
-              )}
-            </div>
-          </InfiniteScroll>
-
-          {selectedImage && (
-            <ImageModal
-              image={selectedImage}
-              onClose={() => setSelectedImage(null)}
-            />
           )}
         </div>
+      </div>
+
+      {/* Results count */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 pb-2">
+        <p className="text-xs text-ash">
+          {images.length > 0
+            ? `Showing ${images.length} results for "${userPrompt}"`
+            : ''}
+        </p>
+      </div>
+
+      {/* Gallery */}
+      <InfiniteScroll
+        dataLength={images.length}
+        next={loadMoreImages}
+        hasMore={hasMore}
+        loader={
+          <div className="flex justify-center py-10">
+            <div className="w-6 h-6 border-2 border-cloud border-t-sage-400 rounded-full animate-spin" />
+          </div>
+        }
+        endMessage={
+          images.length > 0 ? (
+            <div className="text-center py-10">
+              <p className="text-sm text-ash">You&apos;ve seen it all ✨</p>
+            </div>
+          ) : null
+        }
+      >
+        <div className="px-4 sm:px-6 py-4">
+          {isSearching ? (
+            <div className="flex flex-col items-center justify-center py-20">
+              <div className="w-8 h-8 border-2 border-cloud border-t-mist-400 rounded-full animate-spin mb-4" />
+              <p className="text-sm text-ash">Finding beautiful images...</p>
+            </div>
+          ) : images.length > 0 ? (
+            <ImageGallery images={images} onImageClick={setSelectedImage} />
+          ) : (
+            <div className="text-center py-20">
+              <FiSearch className="mx-auto text-cloud mb-3" size={32} />
+              <h3 className="text-base font-medium text-charcoal mb-1">
+                No images found
+              </h3>
+              <p className="text-sm text-ash">Try different search terms</p>
+            </div>
+          )}
+        </div>
+      </InfiniteScroll>
+
+      {selectedImage && (
+        <ImageModal
+          image={selectedImage}
+          onClose={() => setSelectedImage(null)}
+        />
       )}
-    </>
+    </div>
   );
 
   const renderCurrentPage = () => {
     switch (currentPage) {
       case 'collections':
-        return <Collections onBack={handleBackToSearch} />;
+        return <Collections onBack={() => handleNavigate('search')} />;
       case 'favorites':
-        return <Favorites onBack={handleBackToSearch} />;
+        return <Favorites onBack={() => handleNavigate('search')} />;
       default:
-        return renderSearchPage();
+        return showResults ? renderResults() : renderHome();
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#fcdedc] transition-colors duration-300 text-gray-900">
-      <Header />
+    <div className="min-h-screen bg-cream text-charcoal">
+      <Header
+        currentPage={currentPage}
+        onNavigate={handleNavigate}
+        showNav={showResults || currentPage !== 'search'}
+      />
       {renderCurrentPage()}
     </div>
   );

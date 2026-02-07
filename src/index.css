@@ -1,50 +1,95 @@
-@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;500;600;700&family=Caveat:wght@400;500;600;700&family=Quicksand:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --color-cream: #faf9f6;
+  --color-linen: #f3f0eb;
+
+  --color-sage-50: #f0f4ef;
+  --color-sage-100: #dde5db;
+  --color-sage-200: #c4d4c0;
+  --color-sage-300: #a8bfa3;
+  --color-sage-400: #9caa97;
+  --color-sage-500: #7d9477;
+  --color-sage-600: #657a60;
+  --color-sage-700: #4d5f49;
+
+  --color-mist-50: #eef3f7;
+  --color-mist-100: #dce7ef;
+  --color-mist-200: #b3c8d8;
+  --color-mist-300: #8ba4b8;
+  --color-mist-400: #6d8da5;
+  --color-mist-500: #557589;
+  --color-mist-600: #435d6e;
+
+  --color-sand-50: #f5f0eb;
+  --color-sand-100: #e8e0d5;
+  --color-sand-200: #d4c7b7;
+  --color-sand-300: #c4b5a4;
+  --color-sand-400: #a89a88;
+  --color-sand-500: #8c7e6d;
+
+  --color-charcoal: #3d3d3d;
+  --color-ash: #7a7a7a;
+  --color-cloud: #e8e6e3;
+
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-display: 'Playfair Display', Georgia, serif;
+
+  --animate-fade-in: fadeIn 0.4s ease-out;
+  --animate-slide-up: slideUp 0.3s ease-out;
+  --animate-slide-down: slideDown 0.2s ease-out;
+  --animate-scale-in: scaleIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(8px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes slideDown {
+  from { transform: translateY(-4px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
 
 @layer base {
-  html {
-    font-family: 'Fredoka', sans-serif;
-  }
-  
   body {
-    font-family: 'Fredoka', sans-serif;
-    background-color: #fcdedc;
-    transition: background-color 0.3s ease;
+    background-color: var(--color-cream);
+    color: var(--color-charcoal);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 
-@layer components {
-  .font-fredoka {
-    font-family: 'Fredoka', sans-serif;
-  }
-  
-  .font-caveat {
-    font-family: 'Caveat', cursive;
-  }
-  
-  .font-quicksand {
-    font-family: 'Quicksand', sans-serif;
-  }
-}
-
-/* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 10px;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #fbb6ce;
-  border-radius: 10px;
+  background: #d6d3d1;
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #f687b3;
+  background: #a8a29e;
+}
+
+::selection {
+  background: #dce7ef;
+  color: #3d3d3d;
 }
